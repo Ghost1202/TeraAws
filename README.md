@@ -1,1 +1,5 @@
-# AWS EC2 Infrastructure (Task 3.2.4)
+# TeraAws
+
+Create PR for main(Master)
+
+This Repo created for task 3.2.4
