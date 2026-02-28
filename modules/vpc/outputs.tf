@@ -1,11 +1,9 @@
 output "vpc_id" {
-  value = aws_vpc.this.id
+  value       = aws_vpc.this.id
+  description = "ID of the VPC"
 }
 
-output "public_subnet_id" {
-  value = aws_subnet.public.id
-}
-
-output "default_sg_id" {
-  value = aws_security_group.default.id
+output "public_subnet_ids" {
+  value       = [for s in aws_subnet.public : s.id]
+  description = "IDs of public subnets in all AZs"
 }

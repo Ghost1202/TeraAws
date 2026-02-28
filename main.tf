@@ -1,34 +1,13 @@
-terraform {
-  required_version = ">= 1.5.0"
-
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.0"
-    }
-  }
-}
-
-provider "aws" {
-  region = var.aws_region
-}
-
-######################
-# VPC module
-######################
 module "vpc" {
-  source = "./modules/vpc"
-
-  name              = "my-vpc"
+  source           = "./modules/vpc"
+  name             = local.name
   ssh_allowed_cidrs = var.ssh_allowed_cidrs
+  vpc_cidr         = var.vpc_cidr
+  tags             = var.tags
 }
 
-######################
-# IAM role & profile for EC2
-######################
 resource "aws_iam_role" "ec2_role" {
-  name = "myapp-ec2-role"
-
+  name = local.name
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
@@ -41,37 +20,52 @@ resource "aws_iam_role" "ec2_role" {
   })
 }
 
-resource "aws_iam_role_policy_attachment" "attach_route53" {
-  role       = aws_iam_role.ec2_role.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonRoute53FullAccess"
-}
-
 resource "aws_iam_instance_profile" "ec2_profile" {
-  name = "myapp-ec2-profile"
+  name = local.name
   role = aws_iam_role.ec2_role.name
 }
 
-######################
-# EC2 module
-######################
-module "app_ec2" {
-  source = "./modules/ec2"
+resource "aws_security_group" "ec2_sg" {
+  name        = "${local.name}-sg"
+  description = "Allow SSH"
+  vpc_id      = module.vpc.vpc_id
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = var.ssh_allowed_cidrs
+  }
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  tags = var.tags
+}
 
+module "app_ec2" {
+  source           = "./modules/ec2"
   ami              = var.ami
   instance_type    = var.instance_type
   key_name         = var.key_name
-  subnet_id        = module.vpc.public_subnet_id
-  security_group_ids = [module.vpc.default_sg_id]
+  subnet_id        = module.vpc.public_subnet_ids[0]
+  security_group_ids = [aws_security_group.ec2_sg.id]
   instance_profile = aws_iam_instance_profile.ec2_profile.name
   allocate_eip     = var.allocate_eip
+  fqdn             = var.fqdn
+  tags             = var.tags
 }
 
-######################
-# DNS module
-######################
-module "dns_record" {
-  source          = "./modules/dns_record"
-  name            = "kbnby.online"
-  hosted_zone_id  = "Z0988908117FU1A1YFVP8"
-  target_ip       = module.app_ec2.public_ip
+data "aws_route53_zone" "main" {
+  name         = var.fqdn
+  private_zone = false
+}
+
+resource "aws_route53_record" "this" {
+  zone_id = data.aws_route53_zone.main.id
+  name    = var.fqdn
+  type    = "A"
+  ttl     = 300
+  records = [module.app_ec2.public_ip]
 }
