@@ -6,9 +6,14 @@ resource "aws_instance" "this" {
   vpc_security_group_ids      = var.security_group_ids
   iam_instance_profile        = var.instance_profile
   associate_public_ip_address = false
-  tags                        = merge({ Name = "App EC2" }, var.tags)
+  user_data                   = var.user_data
 
-  user_data = templatefile("${path.module}/userdata.tpl", { fqdn = var.fqdn })
+  tags = merge(
+    {
+      Name = "App EC2"
+    },
+    var.tags
+  )
 }
 
 resource "aws_eip" "this" {

@@ -44,3 +44,8 @@ variable "tags" {
   description = "Additional tags to apply to the EC2 instance"
   default     = {}
 }
+
+variable "user_data" {
+  type        = string
+  description = "Rendered user data script for the EC2 instance"
+}
