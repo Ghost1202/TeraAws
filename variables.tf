@@ -21,6 +21,7 @@ variable "key_name" {
 variable "allocate_eip" {
   type        = bool
   description = "Whether to allocate Elastic IP for EC2"
+  default     = false
 }
 
 variable "vpc_cidr" {
@@ -35,7 +36,12 @@ variable "tags" {
   description = "Map of tags applied to resources"
 }
 
+variable "zone_name" {
+  type        = string
+  description = "Public Route53 hosted zone name, for example example.com"
+}
+
 variable "fqdn" {
   type        = string
-  description = "Fully qualified domain name for DNS record"
+  description = "Fully qualified domain name for DNS record, for example app.example.com"
 }

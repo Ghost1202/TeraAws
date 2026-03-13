@@ -11,12 +11,12 @@ resource "aws_internet_gateway" "igw" {
 }
 
 resource "aws_subnet" "public" {
-  for_each              = toset(data.aws_availability_zones.available.names)
-  vpc_id                = aws_vpc.this.id
-  cidr_block            = cidrsubnet(var.vpc_cidr, 8, index(data.aws_availability_zones.available.names, each.key))
-  availability_zone     = each.key
+  for_each                = toset(data.aws_availability_zones.available.names)
+  vpc_id                  = aws_vpc.this.id
+  cidr_block              = cidrsubnet(var.vpc_cidr, 8, index(data.aws_availability_zones.available.names, each.key))
+  availability_zone       = each.key
   map_public_ip_on_launch = true
-  tags                  = merge({ Name = "${var.name}-public-${each.key}" }, var.tags)
+  tags                    = merge({ Name = "${var.name}-public-${each.key}" }, var.tags)
 }
 
 resource "aws_route_table" "public" {
@@ -29,7 +29,7 @@ resource "aws_route_table" "public" {
 }
 
 resource "aws_route_table_association" "public_assoc" {
-  for_each      = aws_subnet.public
-  subnet_id     = each.value.id
+  for_each       = aws_subnet.public
+  subnet_id      = each.value.id
   route_table_id = aws_route_table.public.id
 }

@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
 apt-get update -y
 apt-get install -y nginx
@@ -18,16 +18,17 @@ EOF
 
 cat >/etc/nginx/sites-available/default <<EOF
 server {
-  listen 80 default_server;
-  listen [::]:80 default_server;
-  server_name ${fqdn};
+    listen 80 default_server;
+    listen [::]:80 default_server;
 
-  root /var/www/html;
-  index index.html;
+    root /var/www/html;
+    index index.html;
 
-  location / {
-    try_files \$uri \$uri/ =404;
-  }
+    server_name ${fqdn};
+
+    location / {
+        try_files \$uri \$uri/ =404;
+    }
 }
 EOF
 
