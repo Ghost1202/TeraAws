@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">= 1.5.0"
+  required_version = ">= 1.14.0"
 
   required_providers {
     aws = {
@@ -13,4 +13,11 @@ terraform {
 
 provider "aws" {
   region = "eu-central-1"
+
+  default_tags {
+    tags = {
+      Project     = "myapp"
+      Environment = terraform.workspace
+    }
+  }
 }

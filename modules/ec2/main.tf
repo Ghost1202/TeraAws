@@ -1,3 +1,9 @@
+locals {
+  ami_id        = coalesce(var.ami_override, "ami-0e872aee57663ae2d")
+  instance_type = coalesce(var.instance_type_override, "t3.micro")
+  allocate_eip  = var.allocate_eip_override == null ? true : var.allocate_eip_override
+}
+
 resource "aws_iam_role" "this" {
   name = "${var.name}-ec2-role"
 
@@ -14,14 +20,18 @@ resource "aws_iam_role" "this" {
     ]
   })
 
-  tags = var.tags
+  tags = {
+    Name = "${var.name}-ec2-role"
+  }
 }
 
 resource "aws_iam_instance_profile" "this" {
   name = "${var.name}-ec2-profile"
   role = aws_iam_role.this.name
 
-  tags = var.tags
+  tags = {
+    Name = "${var.name}-ec2-profile"
+  }
 }
 
 resource "aws_security_group" "this" {
@@ -52,17 +62,14 @@ resource "aws_security_group" "this" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = merge(
-    {
-      Name = "${var.name}-sg"
-    },
-    var.tags
-  )
+  tags = {
+    Name = "${var.name}-sg"
+  }
 }
 
 resource "aws_instance" "this" {
-  ami                         = var.ami
-  instance_type               = var.instance_type
+  ami                         = local.ami_id
+  instance_type               = local.instance_type
   key_name                    = var.key_name
   subnet_id                   = var.subnet_id
   vpc_security_group_ids      = [aws_security_group.this.id]
@@ -70,23 +77,17 @@ resource "aws_instance" "this" {
   associate_public_ip_address = true
   user_data                   = var.user_data
 
-  tags = merge(
-    {
-      Name = "${var.name}-ec2"
-    },
-    var.tags
-  )
+  tags = {
+    Name = "${var.name}-ec2"
+  }
 }
 
 resource "aws_eip" "this" {
-  count    = var.allocate_eip ? 1 : 0
+  count    = local.allocate_eip ? 1 : 0
   instance = aws_instance.this.id
   domain   = "vpc"
 
-  tags = merge(
-    {
-      Name = "${var.name}-eip"
-    },
-    var.tags
-  )
+  tags = {
+    Name = "${var.name}-eip"
+  }
 }

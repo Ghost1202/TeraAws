@@ -3,14 +3,16 @@ variable "name" {
   description = "Name prefix for EC2-related resources"
 }
 
-variable "ami" {
+variable "ami_override" {
   type        = string
-  description = "AMI ID for the EC2 instance"
+  description = "Optional override for the AMI ID of the EC2 instance"
+  default     = null
 }
 
-variable "instance_type" {
+variable "instance_type_override" {
   type        = string
-  description = "EC2 instance type"
+  description = "Optional override for the EC2 instance type"
+  default     = null
 }
 
 variable "key_name" {
@@ -33,19 +35,13 @@ variable "ssh_allowed_cidrs" {
   description = "Allowed CIDRs for SSH access"
 }
 
-variable "allocate_eip" {
+variable "allocate_eip_override" {
   type        = bool
-  description = "Whether to allocate an Elastic IP for the instance"
-  default     = false
+  description = "Optional override for whether to allocate an Elastic IP"
+  default     = null
 }
 
 variable "user_data" {
   type        = string
   description = "Rendered user data script for the EC2 instance"
-}
-
-variable "tags" {
-  type        = map(string)
-  description = "Additional tags to apply to EC2 resources"
-  default     = {}
 }
